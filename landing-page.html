@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nextSpark — Give it a route home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#101B2E;
+    --ink-2:#172742;
+    --ink-3:#1D3050;
+    --paper:#EDE6D6;
+    --paper-dim:#B9B2A2;
+    --signal:#F4B400;
+    --local:#3E8E5B;
+    --route:#E85C4A;
+    --steel:#7C8798;
+    --line:rgba(237,230,214,0.14);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Oswald', sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.01em;
+    margin:0;
+    color:var(--paper);
+  }
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  a{color:inherit;}
+  img,svg{display:block;max-width:100%;}
+  button{font-family:inherit;cursor:pointer;}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 28px;}
+
+  /* focus visibility */
+  a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible{
+    outline:2px solid var(--signal);
+    outline-offset:3px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+    html{scroll-behavior:auto;}
+  }
+
+  /* ---------- NAV ---------- */
+  header{
+    position:sticky;top:0;z-index:40;
+    background:rgba(16,27,46,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 28px;max-width:1160px;margin:0 auto;
+  }
+  .logo{display:flex;align-items:center;gap:10px;font-family:'Oswald',sans-serif;font-size:20px;font-weight:600;letter-spacing:0.03em;text-transform:uppercase;}
+  .logo .mark{width:26px;height:26px;flex:none;}
+  .nav-links{display:flex;gap:28px;align-items:center;}
+  .nav-links a{
+    font-size:14px;color:var(--paper-dim);text-decoration:none;
+    font-family:'IBM Plex Mono',monospace;
+    border-bottom:1px solid transparent;
+  }
+  .nav-links a:hover{color:var(--paper);border-color:var(--signal);}
+  .locale-badge{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink);
+    background:var(--signal);padding:4px 10px;border-radius:100px;font-weight:500;
+    white-space:nowrap;
+  }
+  @media (max-width:720px){ .nav-links{display:none;} }
+
+  /* ---------- HERO ---------- */
+  .hero{padding:88px 0 64px;position:relative;overflow:hidden;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:0.14em;
+    color:var(--signal);text-transform:uppercase;margin-bottom:18px;display:flex;gap:10px;align-items:center;
+  }
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--route);display:inline-block;}
+  h1.hero-title{
+    font-size:clamp(40px,6.4vw,74px);
+    line-height:0.98;
+    font-weight:700;
+    max-width:14ch;
+  }
+  h1.hero-title .accent{color:var(--signal);}
+  .hero-sub{
+    margin-top:22px;max-width:52ch;font-size:18px;color:var(--paper-dim);
+  }
+  .hero-ctas{display:flex;gap:16px;flex-wrap:wrap;margin-top:34px;}
+
+  .btn{
+    border:none;border-radius:10px;padding:14px 24px;font-size:15px;font-weight:600;
+    font-family:'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:8px;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover{transform:translateY(-2px);}
+  .btn-primary{background:var(--signal);color:var(--ink);}
+  .btn-primary:hover{box-shadow:0 8px 24px rgba(244,180,0,0.25);}
+  .btn-secondary{background:transparent;color:var(--paper);border:1.5px solid var(--local);}
+  .btn-secondary:hover{background:rgba(62,142,91,0.12);box-shadow:0 8px 24px rgba(62,142,91,0.15);}
+
+  /* ---------- SIGNATURE: ROUTE DIAGRAM ---------- */
+  .route-card{
+    margin-top:56px;background:var(--ink-2);border:1px solid var(--line);
+    border-radius:var(--radius);padding:32px clamp(20px,4vw,44px) 26px;
+  }
+  .route-line-svg{width:100%;height:auto;}
+  .station-label{
+    font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:0.06em;
+    text-transform:uppercase;color:var(--paper-dim);
+  }
+  .station-label.donor{color:var(--signal);}
+  .station-label.org{color:var(--local);}
+  .route-badge{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink);background:var(--paper);
+    padding:3px 9px;border-radius:100px;font-weight:500;
+  }
+  .fork-row{
+    display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:22px;
+  }
+  .fork-pill{
+    display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:100px;
+    font-family:'IBM Plex Mono',monospace;font-size:13px;border:1px solid var(--line);
+  }
+  .fork-pill .sw{width:9px;height:9px;border-radius:50%;flex:none;}
+  .fork-pill.free .sw{background:var(--local);}
+  .fork-pill.paid .sw{background:var(--route);}
+
+  /* ---------- HOW IT WORKS ---------- */
+  section{padding:76px 0;}
+  .section-head{max-width:56ch;margin-bottom:48px;}
+  .section-head .eyebrow{color:var(--local);}
+  .section-head h2{font-size:clamp(28px,3.6vw,42px);}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+  .step{background:var(--ink);padding:32px 26px;position:relative;}
+  .step-num{font-family:'IBM Plex Mono',monospace;color:var(--signal);font-size:14px;margin-bottom:14px;}
+  .step h3{font-size:19px;font-weight:600;text-transform:none;margin-bottom:10px;}
+  .step p{color:var(--paper-dim);font-size:14.5px;margin:0;}
+  @media (max-width:780px){ .steps{grid-template-columns:1fr;} }
+
+  /* ---------- PANELS: DONOR / ORG ---------- */
+  .panels{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  @media (max-width:780px){ .panels{grid-template-columns:1fr;} }
+  .panel{
+    border-radius:var(--radius);padding:36px 32px;border:1px solid var(--line);
+    display:flex;flex-direction:column;
+  }
+  .panel.donor{background:linear-gradient(160deg, var(--ink-3), var(--ink-2));}
+  .panel.org{background:linear-gradient(160deg, #16261F, var(--ink-2));}
+  .panel .tag{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;
+    padding:4px 10px;border-radius:100px;display:inline-block;width:fit-content;margin-bottom:18px;
+  }
+  .panel.donor .tag{background:rgba(244,180,0,0.15);color:var(--signal);}
+  .panel.org .tag{background:rgba(62,142,91,0.18);color:var(--local);}
+  .panel h3{font-size:26px;margin-bottom:12px;}
+  .panel p{color:var(--paper-dim);font-size:15px;flex:1;}
+  .panel .btn{margin-top:18px;align-self:flex-start;}
+
+  /* ---------- FOOTER ---------- */
+  footer{border-top:1px solid var(--line);padding:44px 0 36px;}
+  .footer-row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;align-items:center;}
+  .footer-note{font-size:13px;color:var(--paper-dim);max-width:60ch;}
+  .footer-logo{font-family:'Oswald',sans-serif;text-transform:uppercase;font-weight:600;letter-spacing:0.03em;font-size:15px;}
+
+  /* ---------- MODAL ---------- */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(9,14,24,0.72);backdrop-filter:blur(3px);
+    display:none;align-items:center;justify-content:center;z-index:100;padding:20px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:var(--ink-2);border:1px solid var(--line);border-radius:var(--radius);
+    width:100%;max-width:440px;padding:32px 30px 28px;position:relative;
+  }
+  .modal-close{
+    position:absolute;top:16px;right:16px;background:none;border:none;color:var(--paper-dim);
+    font-size:20px;line-height:1;padding:6px;
+  }
+  .modal-close:hover{color:var(--paper);}
+  .modal .tag{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:0.08em;text-transform:uppercase;
+    color:var(--signal);margin-bottom:10px;display:block;
+  }
+  .modal.org-modal .tag{color:var(--local);}
+  .modal h3{font-size:22px;margin-bottom:8px;}
+  .modal .modal-sub{color:var(--paper-dim);font-size:14px;margin-bottom:22px;}
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--paper-dim);
+    text-transform:uppercase;letter-spacing:0.05em;margin-bottom:7px;
+  }
+  .field input, .field textarea{
+    width:100%;background:var(--ink);border:1px solid var(--line);border-radius:8px;
+    padding:11px 13px;color:var(--paper);font-family:'IBM Plex Sans',sans-serif;font-size:14.5px;
+  }
+  .field textarea{resize:vertical;min-height:88px;}
+  .field input::placeholder, .field textarea::placeholder{color:var(--steel);}
+  .modal .btn{width:100%;justify-content:center;margin-top:6px;}
+
+  .confirm{display:none;}
+  .confirm.show{display:block;}
+  .confirm .check{
+    width:40px;height:40px;border-radius:50%;background:rgba(62,142,91,0.18);
+    display:flex;align-items:center;justify-content:center;margin-bottom:16px;
+  }
+  .confirm h3{font-size:20px;margin-bottom:10px;}
+  .confirm p{color:var(--paper-dim);font-size:14px;margin-bottom:8px;}
+  .confirm .disclaimer-box{
+    margin-top:16px;background:var(--ink);border:1px solid var(--line);border-left:3px solid var(--route);
+    padding:14px 16px;border-radius:8px;font-size:13px;color:var(--paper-dim);
+  }
+  .form-body.hidden{display:none;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <div class="logo">
+      <svg class="mark" viewBox="0 0 26 26" fill="none">
+        <circle cx="13" cy="13" r="12" stroke="var(--signal)" stroke-width="1.6"/>
+        <path d="M14.5 4L8 14.5H12.5L11 22L18.5 11H14L14.5 4Z" fill="var(--signal)"/>
+      </svg>
+      nextSpark
+    </div>
+    <nav class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#orgs">For organizations</a>
+      <a href="#donors">For donors</a>
+    </nav>
+    <span class="locale-badge">NYC · 5 BOROUGHS</span>
+  </div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow"><span class="dot"></span>LOCATION MATCHED · ITEM MATCHED · ROUTED DELIVERY</p>
+      <h1 class="hero-title">Give it a<br>route <span class="accent">home.</span></h1>
+      <p class="hero-sub">nextSpark connects donors to nearby shelters and organizations by neighborhood, distance, and what's actually being given or needed. Drop it off yourself, or pay a small fee and we'll run it over.</p>
+      <div class="hero-ctas">
+        <button class="btn btn-primary" id="openDonor">Sign up as a donor</button>
+        <button class="btn btn-secondary" id="openOrg">List your organization</button>
+      </div>
+
+      <!-- SIGNATURE ROUTE DIAGRAM -->
+      <div class="route-card">
+        <svg class="route-line-svg" viewBox="0 0 760 120" xmlns="http://www.w3.org/2000/svg">
+          <line x1="70" y1="60" x2="690" y2="60" stroke="var(--line)" stroke-width="3"/>
+          <line x1="70" y1="60" x2="360" y2="60" stroke="var(--signal)" stroke-width="3"/>
+          <line x1="360" y1="60" x2="690" y2="60" stroke="var(--local)" stroke-width="3"/>
+          <circle cx="70" cy="60" r="10" fill="var(--ink-2)" stroke="var(--signal)" stroke-width="3"/>
+          <circle cx="360" cy="60" r="6" fill="var(--paper)"/>
+          <circle cx="690" cy="60" r="10" fill="var(--ink-2)" stroke="var(--local)" stroke-width="3"/>
+          <text x="70" y="98" text-anchor="middle" fill="var(--signal)" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="500">DONOR</text>
+          <text x="690" y="98" text-anchor="middle" fill="var(--local)" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="500">ORGANIZATION</text>
+        </svg>
+        <div style="display:flex;justify-content:center;margin-top:-14px;">
+          <span class="route-badge">2.3 MI · WINTER COATS · MATCH FOUND</span>
+        </div>
+        <div class="fork-row">
+          <span class="fork-pill free"><span class="sw"></span>Self drop-off — free</span>
+          <span class="fork-pill paid"><span class="sw"></span>nextSpark delivery — small fee</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">THE ROUTE</p>
+        <h2>Three stops, no detours.</h2>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num mono">01</div>
+          <h3>Tell us what you have — or need</h3>
+          <p>Donors list items like clothing, food, furniture, or hygiene products. Organizations list what they're currently collecting for.</p>
+        </div>
+        <div class="step">
+          <div class="step-num mono">02</div>
+          <h3>We match by location and item</h3>
+          <p>nextSpark ranks nearby shelters and organizations by distance and by whether they actually take what you're giving.</p>
+        </div>
+        <div class="step">
+          <div class="step-num mono">03</div>
+          <h3>Drop off free, or let us deliver</h3>
+          <p>Bring it yourself at no cost, or pay a small delivery fee and we'll get it to the organization's door.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANELS -->
+  <section id="donors">
+    <div class="wrap">
+      <div class="panels">
+        <div class="panel donor">
+          <span class="tag">For donors</span>
+          <h3>Your closet's loss is someone's Tuesday win.</h3>
+          <p>Sign up with just your email. When nextSpark launches, we'll notify you the moment a shelter near you needs exactly what you're holding onto.</p>
+          <button class="btn btn-primary" id="openDonor2">Sign up as a donor</button>
+        </div>
+        <div class="panel org" id="orgs">
+          <span class="tag">For organizations</span>
+          <h3>Tell donors what you actually need.</h3>
+          <p>List your organization with a short bio of who you serve and what you accept. We'll match you to nearby donors instead of leaving it to chance.</p>
+          <button class="btn btn-secondary" id="openOrg2">List your organization</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-row">
+      <span class="footer-logo">nextSpark</span>
+      <p class="footer-note">Built for New York City — matching donors to shelters and organizations by location, distance, and item type, with optional paid delivery.</p>
+    </div>
+  </div>
+</footer>
+
+<!-- DONOR MODAL -->
+<div class="modal-overlay" id="donorOverlay">
+  <div class="modal">
+    <button class="modal-close" aria-label="Close" data-close>&times;</button>
+    <div class="form-body" id="donorForm">
+      <span class="tag">Donor signup</span>
+      <h3>Get matched to a drop nearby</h3>
+      <p class="modal-sub">Just your email — we'll let you know when nextSpark is live in your neighborhood.</p>
+      <div class="field">
+        <label for="donorEmail">Email address</label>
+        <input type="email" id="donorEmail" placeholder="you@email.com" required>
+      </div>
+      <button class="btn btn-primary" id="submitDonor">Join as a donor</button>
+    </div>
+    <div class="confirm" id="donorConfirm">
+      <div class="check">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12l5 5L20 6" stroke="var(--local)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h3>You're on the list</h3>
+      <p>We'll reach out when nextSpark is matching donors near you.</p>
+      <div class="disclaimer-box">
+        Heads up: this is a landing page, not a live product yet. Nothing you entered is stored or contacted — we're only counting genuine interest like yours to gauge demand before we build the real thing.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ORG MODAL -->
+<div class="modal-overlay" id="orgOverlay">
+  <div class="modal org-modal">
+    <button class="modal-close" aria-label="Close" data-close>&times;</button>
+    <div class="form-body" id="orgForm">
+      <span class="tag">Organization signup</span>
+      <h3>List your organization</h3>
+      <p class="modal-sub">A short bio helps us match you with the right donors nearby.</p>
+      <div class="field">
+        <label for="orgName">Organization name</label>
+        <input type="text" id="orgName" placeholder="e.g. Bronx Community Shelter" required>
+      </div>
+      <div class="field">
+        <label for="orgLocation">Location</label>
+        <input type="text" id="orgLocation" placeholder="e.g. Fordham, Bronx or full address" required>
+      </div>
+      <div class="field">
+        <label for="orgBio">Brief bio</label>
+        <textarea id="orgBio" placeholder="Who you serve, and what you currently accept (clothing, food, furniture, etc.)" required></textarea>
+      </div>
+      <div class="field">
+        <label for="orgEmail">Contact email</label>
+        <input type="email" id="orgEmail" placeholder="contact@organization.org" required>
+      </div>
+      <button class="btn btn-secondary" id="submitOrg">List organization</button>
+    </div>
+    <div class="confirm" id="orgConfirm">
+      <div class="check">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12l5 5L20 6" stroke="var(--local)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h3>Your organization is on the list</h3>
+      <p>We'll reach out as nextSpark starts matching donors in your area.</p>
+      <div class="disclaimer-box">
+        Heads up: this is a landing page, not a live product yet. Nothing you entered is stored or contacted — we're only counting genuine interest like yours to gauge demand before we build the real thing.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const donorOverlay = document.getElementById('donorOverlay');
+  const orgOverlay = document.getElementById('orgOverlay');
+
+  function openModal(overlay){ overlay.classList.add('open'); }
+  function closeModal(overlay){ overlay.classList.remove('open'); }
+
+  document.getElementById('openDonor').addEventListener('click', () => openModal(donorOverlay));
+  document.getElementById('openDonor2').addEventListener('click', () => openModal(donorOverlay));
+  document.getElementById('openOrg').addEventListener('click', () => openModal(orgOverlay));
+  document.getElementById('openOrg2').addEventListener('click', () => openModal(orgOverlay));
+
+  document.querySelectorAll('[data-close]').forEach(btn => {
+    btn.addEventListener('click', (e) => closeModal(e.target.closest('.modal-overlay')));
+  });
+  [donorOverlay, orgOverlay].forEach(overlay => {
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(overlay); });
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape'){ closeModal(donorOverlay); closeModal(orgOverlay); }
+  });
+
+  document.getElementById('submitDonor').addEventListener('click', () => {
+    const email = document.getElementById('donorEmail');
+    if (!email.value || !email.value.includes('@')){ email.focus(); return; }
+    document.getElementById('donorForm').classList.add('hidden');
+    document.getElementById('donorConfirm').classList.add('show');
+  });
+
+  document.getElementById('submitOrg').addEventListener('click', () => {
+    const name = document.getElementById('orgName');
+    const location = document.getElementById('orgLocation');
+    const bio = document.getElementById('orgBio');
+    const email = document.getElementById('orgEmail');
+    if (!name.value || !location.value || !bio.value || !email.value || !email.value.includes('@')){
+      (!name.value ? name : !location.value ? location : !bio.value ? bio : email).focus();
+      return;
+    }
+    document.getElementById('orgForm').classList.add('hidden');
+    document.getElementById('orgConfirm').classList.add('show');
+  });
+</script>
+
+</body>
+</html>
